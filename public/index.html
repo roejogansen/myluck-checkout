@@ -24,9 +24,9 @@
         <span class="text-sm">Sikker betaling</span>
       </div>
       <div class="flex items-center gap-3 opacity-80">
-        <img alt="Apple Pay" src="/assets/applepay.png" class="h-4" />
-        <img alt="Mastercard" src="/assets/mastercard.png" class="h-4" />
-        <img alt="VISA" src="/assets/visa.png" class="h-4" />
+        <img alt="VISA" src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" class="h-4" />
+        <img alt="Apple Pay" src="https://developer.apple.com/design/human-interface-guidelines/images/ApplePay_Mark_16x9__a8l2n9k7x5yq_large_2x.png" class="h-4" />
+        <img alt="Mastercard" src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png" class="h-4" />
       </div>
     </div>
     <!-- Urgency strip: real price rise -->
@@ -176,6 +176,10 @@
         <input id="chkBinding" type="checkbox" class="mt-1">
         <span>Jeg bekrefter minste binding for valgt plan og månedlig trekk. <a href="/vilkar" class="underline">Vilkår</a> • <a href="/support" class="underline">Support</a></span>
       </label>
+      <label class="flex items-start gap-2 text-xs text-zinc-700 mt-2">
+        <input id="chkAccess" type="checkbox" class="mt-1">
+        <span>Jeg samtykker til at tilgangen starter umiddelbart, og forstår at angreretten kan bortfalle for digitalt innhold.</span>
+      </label>
     </div>
   </div>
 
@@ -222,16 +226,16 @@
     }
 
     function togglePayButtons(){
-      const ok = document.getElementById('chkBinding').checked;
+      const ok = document.getElementById('chkBinding').checked && document.getElementById('chkAccess').checked;
       const btn = document.getElementById('btnWalletBottom');
       if(ok){ btn.classList.remove('btn-disabled'); } else { btn.classList.add('btn-disabled'); }
     }
 
     function openWallet(){
-      const ok = document.getElementById('chkBinding').checked;
-      if(!ok){ alert('Huk av for samtykke til binding.'); return; }
+      const ok = document.getElementById('chkBinding').checked && document.getElementById('chkAccess').checked;
+      if(!ok){ alert('Huk av for samtykke til binding og umiddelbar tilgang.'); return; }
       window.dispatchEvent(new Event('wallet_open'));
-      const links = { '1m':'https://pay.your-gateway/plan_1m', '6m':'https://pay.your-gateway/plan_6m', '12m':'https://pay.your-gateway/plan_12m' };
+      const links = { '1m':'#pay-1m', '6m':'#pay-6m', '12m':'#pay-12m' };
       location.href = links[selectedPlan];
     }
 
@@ -244,8 +248,9 @@
     document.getElementById('btnWalletTop').addEventListener('click', openWallet);
     document.getElementById('btnWalletBottom').addEventListener('click', openWallet);
 
-    // Consent checkbox
+    // Consent checkboxes
     document.getElementById('chkBinding').addEventListener('change', togglePayButtons);
+    document.getElementById('chkAccess').addEventListener('change', togglePayButtons);
 
     // Toggle card form
     document.getElementById('toggleCardLink').addEventListener('click', ()=>{
