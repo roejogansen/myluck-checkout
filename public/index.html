@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Myluck — Kasse</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .sticky-bar{box-shadow:0 1px 8px rgba(0,0,0,.06)}
+    .paybar{box-shadow:0 -8px 28px rgba(0,0,0,.10)}
+    .tile{transition:transform .15s ease, box-shadow .15s ease}
+    .tile:hover{transform:translateY(-1px)}
+    .tile-selected{box-shadow:0 0 0 3px #0f172a inset}
+    .badge{font-size:11px;padding:2px 8px;border-radius:999px}
+    .btn-disabled{opacity:.5;pointer-events:none}
+  </style>
+</head>
+<body class="bg-white text-zinc-900">
+  <!-- Sticky trust header -->
+  <header class="sticky top-0 z-50 bg-white sticky-bar">
+    <div class="mx-auto max-w-md px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 10V8a6 6 0 1112 0v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="4" y="10" width="16" height="10" rx="2" stroke="currentColor" stroke-width="2"/></svg>
+        <span class="text-sm">Sikker betaling</span>
+      </div>
+      <div class="flex items-center gap-3 opacity-80">
+        <img alt="Apple Pay" src="/assets/applepay.png" class="h-4" />
+        <img alt="Mastercard" src="/assets/mastercard.png" class="h-4" />
+        <img alt="VISA" src="/assets/visa.png" class="h-4" />
+      </div>
+    </div>
+    <!-- Urgency strip: real price rise -->
+    <div class="bg-amber-100 border-t border-amber-200">
+      <div class="mx-auto max-w-md px-4 py-2 text-sm flex items-center justify-between">
+        <div class="flex items-center gap-2 text-amber-900">
+          <span>⬆️</span>
+          <span><strong>Prisøkning 29. sep</strong> — lås dagens pris nå.</span>
+        </div>
+        <div class="text-amber-900" id="countdown">—:—:—</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="mx-auto max-w-md px-4 pt-6 pb-44">
+    <!-- Hero -->
+    <section class="space-y-3">
+      <h1 class="text-2xl font-semibold leading-tight">Din personlige plan. Start i dag.</h1>
+      <p class="text-zinc-700">Fra <strong>490 kr/mnd</strong> · <strong>Ingen kaloritelling</strong> · <strong>Hjem eller studio</strong> · <strong>2 000+ medlemmer</strong></p>
+      <div class="flex items-center gap-2 text-sm text-zinc-700">
+        <span>★★★★☆</span>
+        <span>4,7/5 — 2 134 aktive siste 30 dager</span>
+      </div>
+      <button id="btnWalletTop" class="w-full mt-2 rounded-full bg-rose-200 text-zinc-900 border-2 border-zinc-900 py-4 text-center text-base font-semibold">Start 12 mnd nå</button>
+      <p id="perDayLine" class="text-sm text-zinc-700 text-center mt-2"></p>
+      <p class="text-xs text-zinc-600 text-center">Eller <button id="toggleCardLink" class="underline">betal med kort</button></p>
+    </section>
+
+    <!-- Inline card form (collapsed by default) -->
+    <section id="cardForm" class="mt-4 hidden">
+      <div class="rounded-xl border border-zinc-200 p-4 space-y-3">
+        <div class="grid grid-cols-1 gap-3">
+          <input class="border rounded-lg px-3 py-3" placeholder="Kortnummer" />
+          <div class="grid grid-cols-2 gap-3">
+            <input class="border rounded-lg px-3 py-3" placeholder="MM/ÅÅ" />
+            <input class="border rounded-lg px-3 py-3" placeholder="CVC" />
+          </div>
+          <input class="border rounded-lg px-3 py-3" placeholder="Navn på kortet" />
+        </div>
+        <p class="text-xs text-zinc-600">Betalingen behandles sikkert. Du ser plan og neste trekk før du bekrefter.</p>
+      </div>
+    </section>
+
+    <!-- Velg plan -->
+    <section class="mt-8" id="plans">
+      <h2 class="text-lg font-semibold mb-3">Velg plan</h2>
+      <div class="grid gap-4">
+        <!-- 1 mnd (anchor) -->
+        <article data-plan="1m" class="tile rounded-2xl border border-zinc-200 p-4 cursor-pointer">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold">1 mnd</h3>
+            <span class="text-sm text-zinc-600">890 kr</span>
+          </div>
+          <p class="text-sm text-zinc-700 mt-1">Prøv én måned. Høyest pris per mnd.</p>
+          <p class="text-xs text-zinc-500 mt-1">Ingen fornøyd-garanti</p>
+        </article>
+
+        <!-- 6 mnd (most popular) -->
+        <article data-plan="6m" class="tile rounded-2xl border-2 border-zinc-900 p-4 cursor-pointer relative">
+          <div class="absolute -top-3 right-4 badge bg-zinc-900 text-white">Most Popular</div>
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold">6 mnd</h3>
+            <span class="text-sm text-zinc-600">590 kr/mnd</span>
+          </div>
+          <p class="text-sm text-zinc-700 mt-1">Spar 1 800 kr mot 1 mnd. Minste binding 6 mnd.</p>
+          <p class="text-xs text-emerald-600 mt-1">✔ 14 dagers fornøyd-garanti</p>
+        </article>
+
+        <!-- 12 mnd (best value) -->
+        <article data-plan="12m" class="tile rounded-2xl border-2 border-rose-600 p-4 cursor-pointer relative bg-rose-50">
+          <div class="absolute -top-3 right-4 badge bg-rose-600 text-white">Best Value</div>
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold">12 mnd</h3>
+            <span class="text-sm text-zinc-600">490 kr/mnd</span>
+          </div>
+          <p class="text-sm text-zinc-700 mt-1">Spar 4 800 kr mot 1 mnd. Minste binding 12 mnd.</p>
+          <p class="text-xs text-emerald-600 mt-1">✔ 14 dagers fornøyd-garanti</p>
+        </article>
+      </div>
+      <p class="text-xs text-zinc-600 mt-3"><span class="inline-block mr-1">🔒</span>Vil du prøve risikofritt? 14 dagers fornøyd‑garanti på <strong>6 og 12 mnd</strong>. Gjelder ikke 1 mnd.</p>
+
+      <!-- First 7 days preview -->
+      <section class="mt-6">
+        <div class="rounded-xl border border-zinc-200 p-4">
+          <div class="text-sm text-zinc-800"><span class="font-medium">Første 7 dager – slik ser det ut:</span>
+            <ul class="mt-2 space-y-2">
+              <li>Dag 1: Oppstart & 15–20 min «short‑day» økt</li>
+              <li>Dag 2–5: 20–30 min økter (hjem eller studio) + enkel middagsplan</li>
+              <li>Dag 6–7: Søndagsplan & handleliste</li>
+            </ul>
+          </div>
+        </div>
+        <p class="text-xs text-zinc-600 mt-3">By design: Ingen kaloritelling · Familievennlig (5 ingredienser) · 20–35 min økter · Daglige mikrooppgaver · 14 dagers garanti (6/12 mnd).</p>
+      </section>
+    </section>
+
+    <!-- Dette får du -->
+    <section class="mt-10">
+      <h2 class="text-lg font-semibold mb-3">Dette får du</h2>
+      <ul class="space-y-3 text-sm text-zinc-800">
+        <li class="flex gap-3"><span>🏋️‍♀️</span><span>Personlig trenings‑ og matplan som tilpasser seg deg</span></li>
+        <li class="flex gap-3"><span>🏃‍♀️</span><span>Tilgang til alle Transformation Marathons</span></li>
+        <li class="flex gap-3"><span>🍲</span><span>200+ oppskrifter med handlelister (familievennlige bytter)</span></li>
+        <li class="flex gap-3"><span>🤝</span><span>Privat støttefellesskap og daglig veiledning</span></li>
+      </ul>
+    </section>
+
+    <!-- Resultater / bevis -->
+    <section class="mt-10">
+      <h2 class="text-lg font-semibold mb-3">Resultater</h2>
+      <div class="grid grid-cols-3 gap-2">
+        <div class="aspect-[3/4] rounded-lg bg-zinc-100"></div>
+        <div class="aspect-[3/4] rounded-lg bg-zinc-100"></div>
+        <div class="aspect-[3/4] rounded-lg bg-zinc-100"></div>
+      </div>
+      <div class="text-sm text-zinc-700 mt-3 space-y-1">
+        <p>«Fikk struktur uten kaloritelling.» — Maria, 34</p>
+        <p>«20–30 min hjemme passet hverdagen.» — Annika, 29</p>
+      </div>
+    </section>
+
+    <!-- Vanlige spørsmål -->
+    <section class="mt-10">
+      <h2 class="text-lg font-semibold mb-3">Vanlige spørsmål</h2>
+      <div class="space-y-2 text-sm text-zinc-800">
+        <p><span class="font-medium">Tid:</span> 20–35 min · 3×/uke</p>
+        <p><span class="font-medium">Motivasjon:</span> Daglige mikrooppgaver · SMS/DM‑støtte (valgfritt)</p>
+        <p><span class="font-medium">Familie:</span> Familievennlige bytter · 5 ingredienser</p>
+        <p><span class="font-medium">Helse:</span> Gravid/postpartum‑spor · Skånsomme økter · Lavt stoffskifte‑tips</p>
+        <p><span class="font-medium">Pris:</span> Klar oppsummering i kassen. 14 dagers fornøyd‑garanti på 6/12 mnd.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Sticky pay bar -->
+  <div class="fixed bottom-0 inset-x-0 bg-white paybar">
+    <div class="mx-auto max-w-md px-4 pt-3 flex items-center justify-between gap-3">
+      <div class="text-sm">
+        <div id="barPlan" class="font-semibold">Premium · 12 mnd</div>
+        <div id="barCopy" class="text-zinc-600">490 kr i dag. Neste trekk … Minste binding 12 mnd. <span id="barGuarantee" class="text-emerald-600"></span></div>
+      </div>
+      <button id="btnWalletBottom" class="shrink-0 rounded-full bg-rose-200 text-zinc-900 border-2 border-zinc-900 px-4 py-3 text-sm font-semibold btn-disabled">Betal sikkert og start</button>
+    </div>
+    <div class="mx-auto max-w-md px-4 pb-4">
+      <label class="flex items-start gap-2 text-xs text-zinc-700">
+        <input id="chkBinding" type="checkbox" class="mt-1">
+        <span>Jeg bekrefter minste binding for valgt plan og månedlig trekk. <a href="/vilkar" class="underline">Vilkår</a> • <a href="/support" class="underline">Support</a></span>
+      </label>
+    </div>
+  </div>
+
+  <script>
+    // --- Config ---
+    const BILLING_DAY = 18; // your rebill day
+    const DEADLINE = new Date(new Date().getFullYear(), 8, 29, 23, 59, 59); // 29 Sep 23:59 (month index 8=Sep)
+    const monthsNO = ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
+    const plans = {
+      '1m': { label:'1 mnd', priceToday:890, per:'', binding:0, cta:'Start 1 mnd nå', guarantee:false },
+      '6m': { label:'6 mnd', priceToday:590, per:'/mnd', binding:6, cta:'Start 6 mnd nå', guarantee:true },
+      '12m': { label:'12 mnd', priceToday:490, per:'/mnd', binding:12, cta:'Start 12 mnd nå', guarantee:true }
+    };
+
+    let selectedPlan = '12m';
+
+    function nextBillingString(){
+      const now = new Date();
+      let next = new Date(now.getFullYear(), now.getMonth(), BILLING_DAY);
+      if (now.getDate() >= BILLING_DAY) next = new Date(now.getFullYear(), now.getMonth()+1, BILLING_DAY);
+      return `${BILLING_DAY}. ${monthsNO[next.getMonth()]}`;
+    }
+
+    function perDay(price){
+      return (Math.round((price/30)*10)/10).toFixed(1); // ≈ kr per dag
+    }
+
+    function updateUI(){
+      document.querySelectorAll('[data-plan]').forEach(el=>{
+        if(el.dataset.plan===selectedPlan) el.classList.add('tile-selected');
+        else el.classList.remove('tile-selected');
+      });
+      const p = plans[selectedPlan];
+      document.getElementById('btnWalletTop').textContent = p.cta;
+      document.getElementById('perDayLine').textContent = `≈ ${perDay(p.priceToday)} kr/dag`;
+      document.getElementById('barPlan').textContent = `Premium · ${p.label}`;
+      const nb = nextBillingString();
+      let copy;
+      if(p.binding===0){ copy = `${p.priceToday} kr i dag. Engangsbetaling.`; }
+      else { copy = `${p.priceToday} kr i dag. Neste trekk ${nb}. Minste binding ${p.binding} mnd.`; }
+      document.getElementById('barCopy').childNodes[0].nodeValue = copy + ' ';
+      document.getElementById('barGuarantee').textContent = p.guarantee ? '✔ 14 dagers garanti' : '';
+      togglePayButtons();
+    }
+
+    function togglePayButtons(){
+      const ok = document.getElementById('chkBinding').checked;
+      const btn = document.getElementById('btnWalletBottom');
+      if(ok){ btn.classList.remove('btn-disabled'); } else { btn.classList.add('btn-disabled'); }
+    }
+
+    function openWallet(){
+      const ok = document.getElementById('chkBinding').checked;
+      if(!ok){ alert('Huk av for samtykke til binding.'); return; }
+      window.dispatchEvent(new Event('wallet_open'));
+      const links = { '1m':'https://pay.your-gateway/plan_1m', '6m':'https://pay.your-gateway/plan_6m', '12m':'https://pay.your-gateway/plan_12m' };
+      location.href = links[selectedPlan];
+    }
+
+    // Bind plan clicks
+    document.querySelectorAll('[data-plan]').forEach(el=>{
+      el.addEventListener('click', ()=>{ selectedPlan = el.dataset.plan; updateUI(); });
+    });
+
+    // Wallet buttons
+    document.getElementById('btnWalletTop').addEventListener('click', openWallet);
+    document.getElementById('btnWalletBottom').addEventListener('click', openWallet);
+
+    // Consent checkbox
+    document.getElementById('chkBinding').addEventListener('change', togglePayButtons);
+
+    // Toggle card form
+    document.getElementById('toggleCardLink').addEventListener('click', ()=>{
+      document.getElementById('cardForm').classList.toggle('hidden');
+    });
+
+    // Countdown to price rise
+    function tick(){
+      const now = new Date();
+      const diff = DEADLINE - now;
+      const el = document.getElementById('countdown');
+      if(diff <= 0){ el.textContent = 'Prisøkning aktiv'; return; }
+      const d = Math.floor(diff/86400000);
+      const h = Math.floor((diff%86400000)/3600000);
+      const m = Math.floor((diff%3600000)/60000);
+      const s = Math.floor((diff%60000)/1000);
+      el.textContent = `${d}d ${h}t ${m}m ${s}s`;
+      requestAnimationFrame(()=>setTimeout(tick,1000));
+    }
+
+    // Init
+    updateUI();
+    tick();
+  </script>
+</body>
+</html>
